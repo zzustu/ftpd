@@ -2,6 +2,7 @@ package ftpd
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -72,6 +73,8 @@ var (
 		"TYPE":          typeCommand{},
 		"USER":          user{},
 		"XPWD":          pwd{},
+		"XMKD":          mkd{},
+		"XRMD":          rmd{},
 	}
 
 	optsMap = map[string]commander{
@@ -139,7 +142,16 @@ func (cmd cwd) Execute(session *FtpSession, request FtpRequest) {
 type dele struct{}
 
 func (cmd dele) Execute(session *FtpSession, request FtpRequest) {
-
+	abspath, _ := session.getFilePath(request.Argument)
+	if fi, err := os.Stat(abspath); err != nil || fi.IsDir() {
+		session.write(reply550RequestedActionNotTaken, "Not a valid file.")
+		return
+	}
+	if err := os.Remove(abspath); err != nil {
+		session.write(reply450RequestedFileActionNotTaken, "Can't delete file.")
+	} else {
+		session.write(reply250RequestedFileActionOkay, "Requested file action okay, deleted "+request.Argument)
+	}
 }
 
 type eprt struct{}
@@ -224,7 +236,12 @@ func (cmd mlst) Execute(session *FtpSession, request FtpRequest) {
 type mkd struct{}
 
 func (cmd mkd) Execute(session *FtpSession, request FtpRequest) {
-
+	abspath, _ := session.getFilePath(request.Argument)
+	if err := os.Mkdir(abspath, os.ModePerm); err != nil {
+		session.write(reply550RequestedActionNotTaken, "Can't create directory.")
+	} else {
+		session.write(reply257PathNameCreated, "directory created.")
+	}
 }
 
 type mlsd struct{}
@@ -426,19 +443,55 @@ func (cmd retr) Execute(session *FtpSession, request FtpRequest) {
 type rmd struct{}
 
 func (cmd rmd) Execute(session *FtpSession, request FtpRequest) {
-
+	abspath, _ := session.getFilePath(request.Argument)
+	if err := os.Remove(abspath); err != nil {
+		session.write(reply450RequestedFileActionNotTaken, "Can't remove.")
+	} else {
+		session.write(reply250RequestedFileActionOkay, "removed.")
+	}
 }
 
 type rnfr struct{}
 
 func (cmd rnfr) Execute(session *FtpSession, request FtpRequest) {
+	arg := request.Argument
+	if arg == "" {
+		session.write(reply501SyntaxErrorInParametersOrArguments, "Syntax error in parameters or arguments.")
+		return
+	}
 
+	abspath, _ := session.getFilePath(arg)
+	_, err := os.Stat(abspath)
+	if err != nil {
+		session.write(reply550RequestedActionNotTaken, "File unavailable.")
+	} else {
+		session.setAttribute(attributeRenameFrom, abspath)
+		session.write(reply350RequestedFileActionPendingFurtherInformation, "Requested file action pending further information.")
+	}
 }
 
 type rnto struct{}
 
 func (cmd rnto) Execute(session *FtpSession, request FtpRequest) {
+	arg := request.Argument
+	if arg == "" {
+		session.write(reply501SyntaxErrorInParametersOrArguments, "Syntax error in parameters or arguments.")
+		return
+	}
 
+	frname := session.getAttribute(attributeRenameFrom)
+	if frname == "" {
+		session.write(reply503BadSequenceOfCommands, "Can't find the file which has to be renamed.")
+		return
+	}
+
+	abspath, _ := session.getFilePath(arg)
+	if err := os.Rename(frname, abspath); err != nil {
+		session.write(reply553RequestedActionNotTakenFileNameNotAllowed, "Rename error.")
+	} else {
+		session.removeAttribute(attributeRenameFrom)
+		session.write(reply250RequestedFileActionOkay, "Requested file action okay, file renamed.")
+	}
 }
 
 type site struct{}
@@ -529,6 +582,46 @@ type stor struct{}
 
 func (cmd stor) Execute(session *FtpSession, request FtpRequest) {
 
+	arg := request.Argument
+
+	if arg == "" {
+		session.write(reply501SyntaxErrorInParametersOrArguments, "Syntax error in parameters or arguments.")
+		return
+	}
+
+	// 检查数据通道是否打开
+	if session.DataConn == nil {
+		session.write(reply503BadSequenceOfCommands, "PORT or PASV must be issued first.")
+		return
+	}
+
+	session.write(reply150FileStatusOkay, "Data transfer starting.")
+
+	abspath, _ := session.getFilePath(arg)
+
+	sz, err := saveFile(abspath, session.DataConn)
+
+	if err != nil {
+		session.write(reply551RequestedActionAbortedPageTypeUnknown, "Error on input file.")
+	} else {
+		message := "Closing data connection, sent " + strconv.FormatInt(sz, 10) + " bytes"
+		session.write(reply226ClosingDataConnection, message)
+	}
+
+	session.CloseDataConn()
+}
+
+func saveFile(abspath string, conn DataConn) (int64, error) {
+	file, err := os.OpenFile(abspath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm)
+	if err != nil {
+		return 0, err
+	}
+
+	defer func() {
+		_ = file.Close()
+	}()
+
+	return io.Copy(file, conn)
 }
 
 type stou struct{}

@@ -16,6 +16,7 @@ import (
 var (
 	attributeUserArgument = "user-argument"
 	attributeDataType     = "data-type"
+	attributeRenameFrom   = "rename-from"
 	dataTypeAscii         = "ASCII"
 	dataTypeBinary        = "Binary"
 )
