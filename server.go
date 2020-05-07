@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	mutex sync.RWMutex
+	//mutex sync.RWMutex
 
 	defaultName           = "Go FTP Server"
 	defaultWelcomeMessage = "Welcome to FTP Server"
@@ -30,6 +30,7 @@ type FtpServer struct {
 	listen      net.Listener
 	ctx         context.Context
 	cancel      context.CancelFunc
+	mutex       sync.RWMutex
 }
 
 func NewFtpServer(opt *FtpServerOpt) *FtpServer {
@@ -93,7 +94,7 @@ func (s *FtpServer) newFtpSession(conn net.Conn) *FtpSession {
 	session.CtrlConn = conn
 	session.CtrlReader = bufio.NewReader(conn)
 	session.CtrlWriter = bufio.NewWriter(conn)
-	session.FtpServer = *s
+	session.FtpServer = s
 	session.RemoteAddr = conn.RemoteAddr()
 	session.LocalAddr = conn.LocalAddr()
 	session.IsLoginedIn = false
@@ -105,68 +106,81 @@ func (s *FtpServer) newFtpSession(conn net.Conn) *FtpSession {
 }
 
 func (s *FtpServer) onStart() {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	if s.ftpListener != nil {
-		for _, v := range s.ftpListener {
-			v.OnStart(*s)
+	go func() {
+		s.mutex.RLock()
+		defer s.mutex.RUnlock()
+		if s.ftpListener != nil {
+			for _, v := range s.ftpListener {
+				v.OnStart(s)
+			}
 		}
-	}
+	}()
 }
 
-func (s *FtpServer) onConnect(session FtpSession) {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	if s.ftpListener != nil {
-		for _, v := range s.ftpListener {
-			v.OnConnect(session)
+func (s *FtpServer) onConnect(session *FtpSession) {
+	go func() {
+		s.mutex.RLock()
+		defer s.mutex.RUnlock()
+		if s.ftpListener != nil {
+			for _, v := range s.ftpListener {
+				v.OnConnect(session)
+			}
 		}
-	}
+	}()
 }
 
-func (s *FtpServer) beforeCommand(session FtpSession, request FtpRequest) {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	if s.ftpListener != nil {
-		for _, v := range s.ftpListener {
-			v.BeforeCommand(session, request)
+func (s *FtpServer) beforeCommand(session *FtpSession, request *FtpRequest) {
+	go func() {
+		s.mutex.RLock()
+		defer s.mutex.RUnlock()
+		if s.ftpListener != nil {
+			for _, v := range s.ftpListener {
+				v.BeforeCommand(session, request)
+			}
 		}
-	}
+	}()
 }
 
-func (s *FtpServer) afterCommand(session FtpSession, request FtpRequest, reply int) {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	if s.ftpListener != nil {
-		for _, v := range s.ftpListener {
-			v.AfterCommand(session, request, reply)
+func (s *FtpServer) afterCommand(session *FtpSession, request *FtpRequest) {
+	go func() {
+		s.mutex.RLock()
+		defer s.mutex.RUnlock()
+		if s.ftpListener != nil {
+			for _, v := range s.ftpListener {
+				v.AfterCommand(session, request)
+			}
 		}
-	}
+	}()
 }
 
-func (s *FtpServer) onDisconnect(session FtpSession) {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	if s.ftpListener != nil {
-		for _, v := range s.ftpListener {
-			v.OnDisconnect(session)
+func (s *FtpServer) onDisconnect(session *FtpSession) {
+	go func() {
+		s.mutex.RLock()
+		defer s.mutex.RUnlock()
+		if s.ftpListener != nil {
+			for _, v := range s.ftpListener {
+				v.OnDisconnect(session)
+			}
 		}
-	}
+	}()
 }
 
 func (s *FtpServer) onStop() {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	if s.ftpListener != nil {
-		for _, v := range s.ftpListener {
-			v.OnStop(*s)
+	go func() {
+		s.mutex.RLock()
+		defer s.mutex.RUnlock()
+		if s.ftpListener != nil {
+			for _, v := range s.ftpListener {
+				v.OnStop(s)
+			}
 		}
-	}
+	}()
 }
 
 func (s *FtpServer) AddListener(name string, lsn FtpListener) {
-	mutex.Lock()
-	defer mutex.Unlock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	if s.ftpListener == nil {
 		s.ftpListener = make(map[string]FtpListener)
 	}
@@ -174,8 +188,8 @@ func (s *FtpServer) AddListener(name string, lsn FtpListener) {
 }
 
 func (s *FtpServer) RemoveListener(name string) {
-	mutex.Lock()
-	defer mutex.Unlock()
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	if s.ftpListener != nil {
 		delete(s.ftpListener, name)
 	}

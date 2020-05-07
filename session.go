@@ -27,7 +27,7 @@ type FtpSession struct {
 	CtrlWriter *bufio.Writer
 	DataConn   DataConn
 
-	FtpServer  FtpServer
+	FtpServer  *FtpServer
 	FtpUser    *FtpUser
 	RemoteAddr net.Addr
 	LocalAddr  net.Addr
@@ -59,7 +59,7 @@ func (session *FtpSession) handler() {
 	session.Close()
 
 	// 断开连接时通知监听器
-	session.FtpServer.onDisconnect(*session)
+	session.FtpServer.onDisconnect(session)
 
 	log.Printf("[%s] =====[!!!]=====", session.RemoteAddr)
 }
@@ -86,13 +86,13 @@ func (session *FtpSession) interpreter(line string) {
 	}
 
 	// 在执行命令前触发beforeCommand监听器
-	session.FtpServer.beforeCommand(*session, request)
+	session.FtpServer.beforeCommand(session, request)
 
 	// 开始执行命令
 	c.Execute(session, request)
 
 	// 在执行命令前触发afterCommand监听器
-	session.FtpServer.afterCommand(*session, request, 0)
+	session.FtpServer.afterCommand(session, request)
 }
 
 func (session *FtpSession) getAttribute(key string) string {

@@ -25,12 +25,12 @@ type FtpUserManager interface {
 }
 
 type FtpListener interface {
-	OnStart(FtpServer)
-	OnConnect(FtpSession)
-	BeforeCommand(FtpSession, FtpRequest)
-	AfterCommand(FtpSession, FtpRequest, int)
-	OnDisconnect(FtpSession)
-	OnStop(FtpServer)
+	OnStart(*FtpServer)
+	OnConnect(*FtpSession)
+	BeforeCommand(*FtpSession, *FtpRequest)
+	AfterCommand(*FtpSession, *FtpRequest)
+	OnDisconnect(*FtpSession)
+	OnStop(*FtpServer)
 }
 
 func decoderSocket(arg string) (*net.TCPAddr, error) {

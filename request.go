@@ -12,10 +12,12 @@ type FtpRequest struct {
 	ReceivedAt time.Time
 }
 
-func parseLine(line string) (request FtpRequest) {
+func parseLine(line string) *FtpRequest {
 	params := strings.SplitN(strings.TrimSpace(line), " ", 2)
-	request.Line = line
-	request.ReceivedAt = time.Now()
+	request := &FtpRequest{
+		Line:       line,
+		ReceivedAt: time.Now(),
+	}
 	sz := len(params)
 	if sz > 0 {
 		request.Command = strings.ToUpper(params[0])
@@ -23,5 +25,5 @@ func parseLine(line string) (request FtpRequest) {
 			request.Argument = params[1]
 		}
 	}
-	return
+	return request
 }

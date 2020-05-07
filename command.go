@@ -13,7 +13,7 @@ import (
 )
 
 type commander interface {
-	Execute(*FtpSession, FtpRequest)
+	Execute(*FtpSession, *FtpRequest)
 }
 
 var (
@@ -95,38 +95,38 @@ func isWithoutAuthenticationCommand(command string) bool {
 
 type abor struct{}
 
-func (cmd abor) Execute(session *FtpSession, request FtpRequest) {
+func (cmd abor) Execute(session *FtpSession, request *FtpRequest) {
 	session.CloseDataConn()
 	session.write(reply226ClosingDataConnection, "ABOR command successful.")
 }
 
 type acct struct{}
 
-func (cmd acct) Execute(session *FtpSession, request FtpRequest) {
+func (cmd acct) Execute(session *FtpSession, request *FtpRequest) {
 	session.write(reply202CommandNotImplemented, "Command ACCT not implemented, superfluous at this site.")
 }
 
 type appe struct{}
 
-func (cmd appe) Execute(session *FtpSession, request FtpRequest) {
+func (cmd appe) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type auth struct{}
 
-func (cmd auth) Execute(session *FtpSession, request FtpRequest) {
+func (cmd auth) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type cdup struct{}
 
-func (cmd cdup) Execute(session *FtpSession, request FtpRequest) {
+func (cmd cdup) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type cwd struct{}
 
-func (cmd cwd) Execute(session *FtpSession, request FtpRequest) {
+func (cmd cwd) Execute(session *FtpSession, request *FtpRequest) {
 
 	path, info, err := session.buildPath(request.Argument)
 
@@ -141,7 +141,7 @@ func (cmd cwd) Execute(session *FtpSession, request FtpRequest) {
 
 type dele struct{}
 
-func (cmd dele) Execute(session *FtpSession, request FtpRequest) {
+func (cmd dele) Execute(session *FtpSession, request *FtpRequest) {
 	abspath, _ := session.getFilePath(request.Argument)
 	if fi, err := os.Stat(abspath); err != nil || fi.IsDir() {
 		session.write(reply550RequestedActionNotTaken, "Not a valid file.")
@@ -156,37 +156,37 @@ func (cmd dele) Execute(session *FtpSession, request FtpRequest) {
 
 type eprt struct{}
 
-func (cmd eprt) Execute(session *FtpSession, request FtpRequest) {
+func (cmd eprt) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type epsv struct{}
 
-func (cmd epsv) Execute(session *FtpSession, request FtpRequest) {
+func (cmd epsv) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type feat struct{}
 
-func (cmd feat) Execute(session *FtpSession, request FtpRequest) {
+func (cmd feat) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type help struct{}
 
-func (cmd help) Execute(session *FtpSession, request FtpRequest) {
+func (cmd help) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type lang struct{}
 
-func (cmd lang) Execute(session *FtpSession, request FtpRequest) {
+func (cmd lang) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type list struct{}
 
-func (cmd list) Execute(session *FtpSession, request FtpRequest) {
+func (cmd list) Execute(session *FtpSession, request *FtpRequest) {
 
 	argument := request.Argument
 	root := session.FtpUser.HomeDir
@@ -205,37 +205,37 @@ func (cmd list) Execute(session *FtpSession, request FtpRequest) {
 
 type md5 struct{}
 
-func (cmd md5) Execute(session *FtpSession, request FtpRequest) {
+func (cmd md5) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type mfmt struct{}
 
-func (cmd mfmt) Execute(session *FtpSession, request FtpRequest) {
+func (cmd mfmt) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type mmd5 struct{}
 
-func (cmd mmd5) Execute(session *FtpSession, request FtpRequest) {
+func (cmd mmd5) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type mdtm struct{}
 
-func (cmd mdtm) Execute(session *FtpSession, request FtpRequest) {
+func (cmd mdtm) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type mlst struct{}
 
-func (cmd mlst) Execute(session *FtpSession, request FtpRequest) {
+func (cmd mlst) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type mkd struct{}
 
-func (cmd mkd) Execute(session *FtpSession, request FtpRequest) {
+func (cmd mkd) Execute(session *FtpSession, request *FtpRequest) {
 	abspath, _ := session.getFilePath(request.Argument)
 	if err := os.Mkdir(abspath, os.ModePerm); err != nil {
 		session.write(reply550RequestedActionNotTaken, "Can't create directory.")
@@ -246,19 +246,19 @@ func (cmd mkd) Execute(session *FtpSession, request FtpRequest) {
 
 type mlsd struct{}
 
-func (cmd mlsd) Execute(session *FtpSession, request FtpRequest) {
+func (cmd mlsd) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type mode struct{}
 
-func (cmd mode) Execute(session *FtpSession, request FtpRequest) {
+func (cmd mode) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type nlst struct{}
 
-func (cmd nlst) Execute(session *FtpSession, request FtpRequest) {
+func (cmd nlst) Execute(session *FtpSession, request *FtpRequest) {
 
 	argument := request.Argument
 	root := session.FtpUser.HomeDir
@@ -277,13 +277,13 @@ func (cmd nlst) Execute(session *FtpSession, request FtpRequest) {
 
 type noop struct{}
 
-func (cmd noop) Execute(session *FtpSession, request FtpRequest) {
+func (cmd noop) Execute(session *FtpSession, request *FtpRequest) {
 	session.write(reply200CommandOkay, "Command NOOP okay.")
 }
 
 type opts struct{}
 
-func (cmd opts) Execute(session *FtpSession, request FtpRequest) {
+func (cmd opts) Execute(session *FtpSession, request *FtpRequest) {
 	argument := request.Argument
 	if argument == "" {
 		session.write(reply501SyntaxErrorInParametersOrArguments, "Syntax error in parameters or arguments.")
@@ -308,7 +308,7 @@ func (cmd opts) Execute(session *FtpSession, request FtpRequest) {
 
 type pass struct{}
 
-func (cmd pass) Execute(session *FtpSession, request FtpRequest) {
+func (cmd pass) Execute(session *FtpSession, request *FtpRequest) {
 	password := request.Argument
 	username := session.getAttribute(attributeUserArgument)
 	if username == "" && session.FtpUser == nil {
@@ -334,19 +334,19 @@ func (cmd pass) Execute(session *FtpSession, request FtpRequest) {
 
 type pasv struct{}
 
-func (cmd pasv) Execute(session *FtpSession, request FtpRequest) {
+func (cmd pasv) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type pbsz struct{}
 
-func (cmd pbsz) Execute(session *FtpSession, request FtpRequest) {
+func (cmd pbsz) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type port struct{}
 
-func (cmd port) Execute(session *FtpSession, request FtpRequest) {
+func (cmd port) Execute(session *FtpSession, request *FtpRequest) {
 	argument := request.Argument
 	if argument == "" {
 		session.write(reply501SyntaxErrorInParametersOrArguments, "Syntax error in parameters or arguments.")
@@ -389,38 +389,38 @@ func (cmd port) Execute(session *FtpSession, request FtpRequest) {
 
 type prot struct{}
 
-func (cmd prot) Execute(session *FtpSession, request FtpRequest) {
+func (cmd prot) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type pwd struct{}
 
-func (cmd pwd) Execute(session *FtpSession, _ FtpRequest) {
+func (cmd pwd) Execute(session *FtpSession, _ *FtpRequest) {
 	session.write(reply257PathNameCreated, fmt.Sprintf("\"%s\" is current directory.", session.CurrentDir))
 }
 
 type quit struct{}
 
-func (cmd quit) Execute(session *FtpSession, request FtpRequest) {
+func (cmd quit) Execute(session *FtpSession, request *FtpRequest) {
 	session.write(reply221ClosingControlConnection, "Goodbye.")
 	session.Close()
 }
 
 type rein struct{}
 
-func (cmd rein) Execute(session *FtpSession, request FtpRequest) {
+func (cmd rein) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type rest struct{}
 
-func (cmd rest) Execute(session *FtpSession, request FtpRequest) {
+func (cmd rest) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type retr struct{}
 
-func (cmd retr) Execute(session *FtpSession, request FtpRequest) {
+func (cmd retr) Execute(session *FtpSession, request *FtpRequest) {
 	abspath, _ := session.getFilePath(request.Argument)
 
 	f, err := os.Open(abspath)
@@ -442,7 +442,7 @@ func (cmd retr) Execute(session *FtpSession, request FtpRequest) {
 
 type rmd struct{}
 
-func (cmd rmd) Execute(session *FtpSession, request FtpRequest) {
+func (cmd rmd) Execute(session *FtpSession, request *FtpRequest) {
 	abspath, _ := session.getFilePath(request.Argument)
 	if err := os.Remove(abspath); err != nil {
 		session.write(reply450RequestedFileActionNotTaken, "Can't remove.")
@@ -453,7 +453,7 @@ func (cmd rmd) Execute(session *FtpSession, request FtpRequest) {
 
 type rnfr struct{}
 
-func (cmd rnfr) Execute(session *FtpSession, request FtpRequest) {
+func (cmd rnfr) Execute(session *FtpSession, request *FtpRequest) {
 	arg := request.Argument
 	if arg == "" {
 		session.write(reply501SyntaxErrorInParametersOrArguments, "Syntax error in parameters or arguments.")
@@ -472,7 +472,7 @@ func (cmd rnfr) Execute(session *FtpSession, request FtpRequest) {
 
 type rnto struct{}
 
-func (cmd rnto) Execute(session *FtpSession, request FtpRequest) {
+func (cmd rnto) Execute(session *FtpSession, request *FtpRequest) {
 	arg := request.Argument
 	if arg == "" {
 		session.write(reply501SyntaxErrorInParametersOrArguments, "Syntax error in parameters or arguments.")
@@ -496,7 +496,7 @@ func (cmd rnto) Execute(session *FtpSession, request FtpRequest) {
 
 type site struct{}
 
-func (cmd site) Execute(session *FtpSession, request FtpRequest) {
+func (cmd site) Execute(session *FtpSession, request *FtpRequest) {
 	argument := request.Argument
 	if argument == "" {
 		session.write(reply200CommandOkay, "Command SITE okay. Use SITE HELP to get more information.")
@@ -516,7 +516,7 @@ func (cmd site) Execute(session *FtpSession, request FtpRequest) {
 
 type size struct{}
 
-func (cmd size) Execute(session *FtpSession, request FtpRequest) {
+func (cmd size) Execute(session *FtpSession, request *FtpRequest) {
 	_, info, err := session.buildPath(request.Argument)
 	if err != nil {
 		session.write(reply550RequestedActionNotTaken, "No such file or directory.")
@@ -533,7 +533,7 @@ func (cmd size) Execute(session *FtpSession, request FtpRequest) {
 
 type siteDescuser struct{}
 
-func (cmd siteDescuser) Execute(session *FtpSession, _ FtpRequest) {
+func (cmd siteDescuser) Execute(session *FtpSession, _ *FtpRequest) {
 	u := session.FtpUser
 	message := fmt.Sprintf("\nusername : %s\npassword : ******\nhome dir : %s", u.Username, u.HomeDir)
 	session.write(reply200CommandOkay, message)
@@ -541,7 +541,7 @@ func (cmd siteDescuser) Execute(session *FtpSession, _ FtpRequest) {
 
 type siteHelp struct{}
 
-func (cmd siteHelp) Execute(session *FtpSession, _ FtpRequest) {
+func (cmd siteHelp) Execute(session *FtpSession, _ *FtpRequest) {
 	message := "\nDESCUSER : display user information." +
 		"\nHELP     : display this message." +
 		"\nSTAT     : show statistics." +
@@ -552,21 +552,21 @@ func (cmd siteHelp) Execute(session *FtpSession, _ FtpRequest) {
 
 type siteStat struct{}
 
-func (cmd siteStat) Execute(session *FtpSession, _ FtpRequest) {
+func (cmd siteStat) Execute(session *FtpSession, _ *FtpRequest) {
 	message := "\nwill todo"
 	session.write(reply200CommandOkay, message)
 }
 
 type siteWho struct{}
 
-func (cmd siteWho) Execute(session *FtpSession, _ FtpRequest) {
+func (cmd siteWho) Execute(session *FtpSession, _ *FtpRequest) {
 	message := "\nwill todo"
 	session.write(reply200CommandOkay, message)
 }
 
 type siteZone struct{}
 
-func (cmd siteZone) Execute(session *FtpSession, _ FtpRequest) {
+func (cmd siteZone) Execute(session *FtpSession, _ *FtpRequest) {
 	s := time.Now()
 	session.write(reply200CommandOkay, s.String())
 }
@@ -574,13 +574,13 @@ func (cmd siteZone) Execute(session *FtpSession, _ FtpRequest) {
 //
 type stat struct{}
 
-func (cmd stat) Execute(session *FtpSession, request FtpRequest) {
+func (cmd stat) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type stor struct{}
 
-func (cmd stor) Execute(session *FtpSession, request FtpRequest) {
+func (cmd stor) Execute(session *FtpSession, request *FtpRequest) {
 
 	arg := request.Argument
 
@@ -626,25 +626,25 @@ func saveFile(abspath string, conn DataConn) (int64, error) {
 
 type stou struct{}
 
-func (cmd stou) Execute(session *FtpSession, request FtpRequest) {
+func (cmd stou) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type stru struct{}
 
-func (cmd stru) Execute(session *FtpSession, request FtpRequest) {
+func (cmd stru) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type syst struct{}
 
-func (cmd syst) Execute(session *FtpSession, request FtpRequest) {
+func (cmd syst) Execute(session *FtpSession, request *FtpRequest) {
 	session.write(reply215NameSystemType, fmt.Sprintf("UNIX Type: %s", session.FtpServer.opt.Name))
 }
 
 type typeCommand struct{}
 
-func (cmd typeCommand) Execute(session *FtpSession, request FtpRequest) {
+func (cmd typeCommand) Execute(session *FtpSession, request *FtpRequest) {
 	if request.Argument == "" {
 		session.write(reply501SyntaxErrorInParametersOrArguments, "Syntax error in parameters or arguments.")
 		return
@@ -666,7 +666,7 @@ func (cmd typeCommand) Execute(session *FtpSession, request FtpRequest) {
 
 type user struct{}
 
-func (cmd user) Execute(session *FtpSession, request FtpRequest) {
+func (cmd user) Execute(session *FtpSession, request *FtpRequest) {
 	username := request.Argument
 	if session.IsLoginedIn {
 		if session.FtpUser.Username == username {
@@ -683,12 +683,12 @@ func (cmd user) Execute(session *FtpSession, request FtpRequest) {
 
 type optsMlst struct{}
 
-func (cmd optsMlst) Execute(session *FtpSession, request FtpRequest) {
+func (cmd optsMlst) Execute(session *FtpSession, request *FtpRequest) {
 
 }
 
 type optsUTF8 struct{}
 
-func (cmd optsUTF8) Execute(session *FtpSession, request FtpRequest) {
+func (cmd optsUTF8) Execute(session *FtpSession, request *FtpRequest) {
 	session.write(reply200CommandOkay, "Command OPTS okay.")
 }
